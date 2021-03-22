@@ -1,9 +1,14 @@
 package com.want.mono;
 
 import com.want.domain.User;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class Transfrom {
+import java.util.Collection;
+import java.util.Collections;
+import java.util.stream.Stream;
+
+public class Transformer {
 
     public static void main(String[] args) {
         // map flatmap filter default
@@ -29,6 +34,18 @@ public class Transfrom {
                 .subscribe(System.out::println);
          */
 
-        //
+        // 1 -> n
+        Mono<char[]> mono = Mono.fromSupplier(() -> "ABCDE")
+                .flatMap(str -> Mono.fromSupplier(str::toCharArray));
+
+        // 1 -> n handle
+        Mono<char[]> mono1 = Mono.fromSupplier(() -> "ABCDE")
+                .handle((str, sink) -> {
+                    char[] chars = str.toCharArray();
+                    sink.next(chars);
+                });
+
+
+
     }
 }
