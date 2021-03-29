@@ -4,6 +4,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author want
@@ -11,7 +12,7 @@ import java.time.Duration;
  */
 public class Error {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // 我想创建一个错误序列：
         Mono.error(new IllegalArgumentException());
         // 我想创建一个错误序列​替换一个完成的
@@ -52,6 +53,32 @@ public class Error {
                 .retry(2);
         Mono.error(IllegalArgumentException::new)
                 .retry(2,ex -> ex instanceof IllegalArgumentException);
+
+        Mono.fromFuture(CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return "v1";
+        }))
+                .map(str -> {
+                    if(true){
+                        throw new RuntimeException("excption");
+                    }
+                    return str;
+                }).doOnNext(System.out::println)
+                .onErrorMap(RuntimeException::new)
+                .zipWith(Mono.fromFuture(CompletableFuture.supplyAsync(() ->{
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return "v2";
+                })).doOnNext(System.out::println).onErrorMap(RuntimeException::new)).subscribe(tuples -> System.out.println("tuples.toString() = " + tuples.toString()));
+
+        Thread.sleep(3000);
     }
 
 }
